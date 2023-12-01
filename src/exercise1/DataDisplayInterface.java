@@ -8,7 +8,6 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -16,9 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DataDisplayInterface extends Application {
-
     private Connection connection;
-
     @Override
     public void start(Stage primaryStage) {
         primaryStage.setTitle("Data Display Interface");
@@ -45,7 +42,6 @@ public class DataDisplayInterface extends Application {
         TitledPane titledPane = new TitledPane(title, grid);
         titledPane.setCollapsible(false);
         populateGrid(grid, tableName);
-
         return titledPane;
     }
 
@@ -58,7 +54,7 @@ public class DataDisplayInterface extends Application {
 
     private void populateGrid(GridPane grid, String tableName) {
         try {
-            connection = connectToDatabase();
+            connection = GameManager.connectToDatabase();
 
             List<String> columnNames = getColumnNames(tableName);
 
@@ -67,7 +63,7 @@ public class DataDisplayInterface extends Application {
                 grid.add(columnHeader, i, 0);
             }
 
-            String query = "SELECT * FROM " + tableName;
+            String query = "SELECT * FROM " + tableName + " ORDER BY " + columnNames.get(0);
             PreparedStatement statement = connection.prepareStatement(query);
             ResultSet resultSet = statement.executeQuery();
 
@@ -81,14 +77,11 @@ public class DataDisplayInterface extends Application {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            closeConnection();
         }
     }
 
     private List<String> getColumnNames(String tableName) throws SQLException {
         List<String> columnNames = new ArrayList<>();
-
         String query = "SELECT column_name FROM all_tab_columns WHERE table_name = ?";
         PreparedStatement statement = connection.prepareStatement(query);
         statement.setString(1, tableName.toUpperCase());
@@ -97,31 +90,7 @@ public class DataDisplayInterface extends Application {
         while (resultSet.next()) {
             columnNames.add(resultSet.getString("column_name"));
         }
-
         return columnNames;
-    }
-
-    private Connection connectToDatabase() throws SQLException {
-        try {
-            Class.forName("oracle.jdbc.OracleDriver");
-            Connection conn = DriverManager.getConnection(GameManager.DB_URL, GameManager.USER, GameManager.PASSWORD);
-            conn.setAutoCommit(false);
-
-            return conn;
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            throw new SQLException("Oracle JDBC driver not found");
-        }
-    }
-
-    private void closeConnection() {
-        try {
-            if (connection != null) {
-                connection.close();
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
     }
 
     public static void main(String[] args) {

@@ -1,3 +1,4 @@
+//MuhammadVohra-Course:COMP228
 package exercise1;
 
 import javafx.application.Application;
@@ -71,7 +72,7 @@ public class GameManager extends Application {
         openDataDisplay.start(new Stage());
     }
 
-    private Connection connectToDatabase() throws SQLException {
+    public static Connection connectToDatabase() throws SQLException {
         try {
             Class.forName("oracle.jdbc.OracleDriver");
             return DriverManager.getConnection(DB_URL, USER, PASSWORD);

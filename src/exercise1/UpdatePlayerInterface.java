@@ -93,7 +93,7 @@ public class UpdatePlayerInterface extends Application {
 
     private void populatePlayerList(ListView<String> playerList) {
         try {
-            connection = connectToDatabase();
+            connection = GameManager.connectToDatabase();
             if (connection != null) {
                 Statement st = connection.createStatement();
                 ResultSet rs = st.executeQuery("SELECT player_id, first_name, last_name FROM player");
@@ -113,8 +113,6 @@ public class UpdatePlayerInterface extends Application {
         } catch (SQLException e) {
             e.printStackTrace();
             System.err.println("Error fetching player data: " + e.getMessage());
-        } finally {
-            closeConnection();
         }
     }
 
@@ -129,7 +127,7 @@ public class UpdatePlayerInterface extends Application {
                 String playerId = matcher.group(1).trim();
 
                 try {
-                    connection = connectToDatabase();
+                    connection = GameManager.connectToDatabase();
                     String selectPlayerSQL = "SELECT * FROM player WHERE player_id = ?";
                     try (PreparedStatement preparedStatement = connection.prepareStatement(selectPlayerSQL)) {
                         preparedStatement.setString(1, playerId);
@@ -146,8 +144,6 @@ public class UpdatePlayerInterface extends Application {
                     }
                 } catch (SQLException e) {
                     e.printStackTrace();
-                } finally {
-                    closeConnection();
                 }
             }
         }
@@ -157,7 +153,7 @@ public class UpdatePlayerInterface extends Application {
     private void updatePlayer(String playerId, String firstName, String lastName, String address, String postalCode,
                               String province, String phoneNumber) {
         try {
-            connection = connectToDatabase();
+            connection = GameManager.connectToDatabase();
             connection.setAutoCommit(false);
 
             String updatePlayerSQL = "UPDATE player SET first_name=?, last_name=?, address=?, postal_code=?, " +
@@ -187,28 +183,6 @@ public class UpdatePlayerInterface extends Application {
             } catch (SQLException ex) {
                 ex.printStackTrace();
             }
-        } finally {
-            closeConnection();
-        }
-    }
-
-    private Connection connectToDatabase() throws SQLException {
-        try {
-            Class.forName("oracle.jdbc.OracleDriver");
-            return DriverManager.getConnection(GameManager.DB_URL, GameManager.USER, GameManager.PASSWORD);
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            throw new SQLException("Oracle JDBC driver not found");
-        }
-    }
-
-    private void closeConnection() {
-        try {
-            if (connection != null && !connection.isClosed()) {
-                connection.close();
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 
