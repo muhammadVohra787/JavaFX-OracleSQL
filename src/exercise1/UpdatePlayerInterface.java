@@ -20,83 +20,99 @@ public class UpdatePlayerInterface extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+        // Set up the main stage
         primaryStage.setTitle("Update Player Interface");
 
+        // Create the main grid
+        GridPane grid = createGrid();
+        // Create a label for the heading
+        Label headingLabel = createLabel("Double-click the element to extract information", 12);
+
+        // Create a ListView for the player list
+        playerList = new ListView<>();
+        playerList.getItems().addAll("Dummy Item");
+        // Populate the player list
+        populatePlayerList(playerList);
+
+        // Create an array of TextFields for player information
+        TextField[] textFields = createTextFields(7);
+        // Create an array of Labels for field descriptions
+        Label[] labels = createLabels("Player ID:", "First Name:", "Last Name:", "Address:",
+                "Postal Code:", "Province:", "Phone Number:");
+
+        // Create a submit button and set its action
+        Button submitButton = new Button("Submit");
+        submitButton.setOnAction(e -> updatePlayer(textFields[0].getText(), textFields[1].getText(),
+                textFields[2].getText(), textFields[3].getText(), textFields[4].getText(),
+                textFields[5].getText(), textFields[6].getText()));
+
+        // Add a listener for the selected item in the player list
+        playerList.getSelectionModel().selectedItemProperty().addListener(
+                (observable, oldValue, newValue) -> populatePlayerFields(newValue, textFields[0], textFields[1],
+                        textFields[2], textFields[3], textFields[4], textFields[5], textFields[6]));
+
+        // Add components to the grid
+        grid.add(headingLabel, 0, 0, 2, 1);
+        grid.add(playerList, 0, 1, 1, 8);
+
+        for (int i = 0; i < labels.length; i++) {
+            grid.add(labels[i], 1, i + 1);
+            grid.add(textFields[i], 2, i + 1);
+        }
+
+        // Make playerIdField uneditable
+        textFields[0].setEditable(false);
+
+        grid.add(submitButton, 2, 8);
+
+        // Create the scene and set it to the stage
+        Scene scene = new Scene(grid, 600, 400);
+        primaryStage.setScene(scene);
+        // Show the stage
+        primaryStage.show();
+    }
+
+    // Helper method to create a GridPane
+    private GridPane createGrid() {
         GridPane grid = new GridPane();
         grid.setPadding(new Insets(10, 10, 10, 10));
         grid.setVgap(8);
         grid.setHgap(10);
-
-        Label headingLabel = new Label("Double-click the element to extract information");
-        headingLabel.setStyle("-fx-font-size: 12pt;");
-
-        Label playerIdLabel = new Label("Player ID:");
-        TextField playerIdField = new TextField();
-
-        Label firstNameLabel = new Label("First Name:");
-        TextField firstNameField = new TextField();
-
-        Label lastNameLabel = new Label("Last Name:");
-        TextField lastNameField = new TextField();
-
-        Label addressLabel = new Label("Address:");
-        TextField addressField = new TextField();
-
-        Label postalCodeLabel = new Label("Postal Code:");
-        TextField postalCodeField = new TextField();
-
-        Label provinceLabel = new Label("Province:");
-        TextField provinceField = new TextField();
-
-        Label phoneNumberLabel = new Label("Phone Number:");
-        TextField phoneNumberField = new TextField();
-
-
-        playerList = new ListView<>();
-
-
-        playerList.getItems().addAll("Dummy Item");
-        populatePlayerList(playerList);
-
-        playerList.getSelectionModel().selectedItemProperty().addListener(
-                (observable, oldValue, newValue) -> populatePlayerFields(newValue, playerIdField, firstNameField, lastNameField,
-                        addressField, postalCodeField, provinceField, phoneNumberField));
-
-        Button submitButton = new Button("Submit");
-        submitButton.setOnAction(e -> updatePlayer(playerIdField.getText(), firstNameField.getText(),
-                lastNameField.getText(), addressField.getText(), postalCodeField.getText(),
-                provinceField.getText(), phoneNumberField.getText()));
-
-        grid.add(headingLabel, 0, 0, 2, 1);
-        grid.add(playerList, 0, 1, 1, 8);
-        grid.add(playerIdLabel, 1, 1);
-        grid.add(playerIdField, 2, 1);
-        grid.add(firstNameLabel, 1, 2);
-        grid.add(firstNameField, 2, 2);
-        grid.add(lastNameLabel, 1, 3);
-        grid.add(lastNameField, 2, 3);
-        grid.add(addressLabel, 1, 4);
-        grid.add(addressField, 2, 4);
-        grid.add(postalCodeLabel, 1, 5);
-        grid.add(postalCodeField, 2, 5);
-        grid.add(provinceLabel, 1, 6);
-        grid.add(provinceField, 2, 6);
-        grid.add(phoneNumberLabel, 1, 7);
-        grid.add(phoneNumberField, 2, 7);
-        grid.add(submitButton, 2, 8);
-
-        Scene scene = new Scene(grid, 600, 400);
-        primaryStage.setScene(scene);
-
-        primaryStage.show();
+        return grid;
     }
 
+    // Helper method to create a styled label
+    private Label createLabel(String text, double fontSize) {
+        Label label = new Label(text);
+        label.setStyle("-fx-font-size: " + fontSize + "pt;");
+        return label;
+    }
+
+    // Helper method to create an array of TextFields
+    private TextField[] createTextFields(int count) {
+        TextField[] textFields = new TextField[count];
+        for (int i = 0; i < count; i++) {
+            textFields[i] = new TextField();
+        }
+        return textFields;
+    }
+
+    // Helper method to create an array of Labels
+    private Label[] createLabels(String... texts) {
+        Label[] labels = new Label[texts.length];
+        for (int i = 0; i < texts.length; i++) {
+            labels[i] = new Label(texts[i]);
+        }
+        return labels;
+    }
+
+    // Helper method to populate the player list from the database
     private void populatePlayerList(ListView<String> playerList) {
         try {
             connection = GameManager.connectToDatabase();
             if (connection != null) {
                 Statement st = connection.createStatement();
-                ResultSet rs = st.executeQuery("SELECT player_id, first_name, last_name FROM player");
+                ResultSet rs = st.executeQuery("SELECT player_id, first_name, last_name FROM player Order by player_id");
                 ResultSetMetaData rsmd = rs.getMetaData();
                 playerList.getItems().clear();
                 while (rs.next()) {
@@ -116,6 +132,7 @@ public class UpdatePlayerInterface extends Application {
         }
     }
 
+    // Helper method to populate the player fields based on the selected player in the list
     private void populatePlayerFields(String selectedPlayer, TextField playerIdField, TextField firstNameField,
                                       TextField lastNameField, TextField addressField, TextField postalCodeField,
                                       TextField provinceField, TextField phoneNumberField) {
@@ -149,7 +166,7 @@ public class UpdatePlayerInterface extends Application {
         }
     }
 
-
+    // Helper method to update player information in the database
     private void updatePlayer(String playerId, String firstName, String lastName, String address, String postalCode,
                               String province, String phoneNumber) {
         try {
@@ -186,6 +203,7 @@ public class UpdatePlayerInterface extends Application {
         }
     }
 
+    // Helper method to show an information alert
     private void showAlert(String title, String content) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(title);
