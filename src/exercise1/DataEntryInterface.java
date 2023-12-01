@@ -14,8 +14,6 @@ import java.sql.DriverManager;
 
 public class DataEntryInterface extends Application {
 
-    private Connection connection;
-
     @Override
     public void start(Stage primaryStage) {
         primaryStage.setTitle("Data Entry Interface");
@@ -25,77 +23,41 @@ public class DataEntryInterface extends Application {
         grid.setVgap(8);
         grid.setHgap(10);
 
-        Label gameTitleLabel = new Label("Game Title:");
-        TextField gameTitleField = new TextField();
+        String[] labelNames = {
+                "Game Title", "Game ID", "Game Score",
+                "Player ID", "Player and Game ID",
+                "First Name", "Last Name", "Address",
+                "Postal Code", "Province", "Phone Number"
+        };
 
-        Label gameIdLabel = new Label("Game ID:");
-        TextField gameIdField = new TextField();
+        Label[] labels = new Label[labelNames.length];
+        TextField[] textFields = new TextField[labelNames.length];
 
-        Label gameScoreIdLabel = new Label("Game Score:");
-        TextField gameScoreIdField = new TextField();
+        for (int i = 0; i < labelNames.length; i++) {
+            String labelText = labelNames[i] + ":";
+            labels[i] = new Label(labelText);
+            textFields[i] = new TextField();
 
-        Label playerIdLabel = new Label("Player ID: ");
-        TextField playerIdField = new TextField();
-
-        Label playerAndGameIdLabel = new Label("Player and Game ID: ");
-        TextField playerAndGameIdField = new TextField();
-
-
-        Label firstNameLabel = new Label("First Name:");
-        TextField firstNameField = new TextField();
-
-        Label lastNameLabel = new Label("Last Name:");
-        TextField lastNameField = new TextField();
-
-        Label addressLabel = new Label("Address:");
-        TextField addressField = new TextField();
-
-        Label postalCodeLabel = new Label("Postal Code:");
-        TextField postalCodeField = new TextField();
-
-        Label provinceLabel = new Label("Province:");
-        TextField provinceField = new TextField();
-
-        Label phoneNumberLabel = new Label("Phone Number:");
-        TextField phoneNumberField = new TextField();
-
+            grid.addRow(i, labels[i], textFields[i]);
+        }
 
         Button submitButton = new Button("Submit");
-        submitButton.setOnAction(e -> insertData(gameTitleField.getText(), gameIdField.getText(),
-                playerIdField.getText(), playerAndGameIdField.getText(),
-                firstNameField.getText(), lastNameField.getText(), addressField.getText(),
-                postalCodeField.getText(), provinceField.getText(), phoneNumberField.getText(),
-                gameScoreIdField.getText()));
+        submitButton.setOnAction(e -> {
 
+            insertData(
+                    textFields[0].getText(), textFields[1].getText(),
+                    textFields[3].getText(), textFields[4].getText(),
+                    textFields[5].getText(), textFields[6].getText(),
+                    textFields[7].getText(), textFields[8].getText(),
+                    textFields[9].getText(), textFields[10].getText(),
+                    textFields[2].getText()
+            );
+        });
 
-        grid.add(gameTitleLabel, 0, 0);
-        grid.add(gameTitleField, 1, 0);
-        grid.add(gameIdLabel, 0, 1);
-        grid.add(gameIdField, 1, 1);
-        grid.add(gameScoreIdLabel, 0, 2);
-        grid.add(gameScoreIdField, 1, 2);
-        grid.add(playerIdLabel, 0, 3);
-        grid.add(playerIdField, 1, 3);
-        grid.add(playerAndGameIdLabel, 0, 4);
-        grid.add(playerAndGameIdField, 1, 4);
-        grid.add(firstNameLabel, 0, 5);
-        grid.add(firstNameField, 1, 5);
-        grid.add(lastNameLabel, 0, 6);
-        grid.add(lastNameField, 1, 6);
-        grid.add(addressLabel, 0, 7);
-        grid.add(addressField, 1, 7);
-        grid.add(postalCodeLabel, 0, 8);
-        grid.add(postalCodeField, 1, 8);
-        grid.add(provinceLabel, 0, 9);
-        grid.add(provinceField, 1, 9);
-        grid.add(phoneNumberLabel, 0, 10);
-        grid.add(phoneNumberField, 1, 10);
-        grid.add(submitButton, 1, 11);
-
+        grid.add(submitButton, 1, labelNames.length);
 
         Scene scene = new Scene(grid, 400, 450);
         primaryStage.setScene(scene);
-
 
         primaryStage.show();
     }
@@ -105,7 +67,7 @@ public class DataEntryInterface extends Application {
                             String province, String phoneNumber, String gameScoreId) {
         try {
 
-            connection = connectToDatabase();
+            Connection connection = GameManager.connectToDatabase();
 
             String insertGameQuery = "INSERT INTO game (game_id, game_title) VALUES (?, ?)";
             PreparedStatement gameStatement = connection.prepareStatement(insertGameQuery);
@@ -142,29 +104,6 @@ public class DataEntryInterface extends Application {
         } catch (SQLException e) {
             e.printStackTrace();
             showAlert("Error", "Failed to insert data. Please check your input and try again.");
-        } finally {
-
-            try {
-                if (connection != null) {
-                    connection.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private Connection connectToDatabase() throws SQLException {
-        try {
-            Class.forName("oracle.jdbc.OracleDriver");
-            Connection conn = DriverManager.getConnection(GameManager.DB_URL, GameManager.USER, GameManager.PASSWORD);
-
-            conn.setAutoCommit(false);
-
-            return conn;
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            throw new SQLException("Oracle JDBC driver not found");
         }
     }
 
